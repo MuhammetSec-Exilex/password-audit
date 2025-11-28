@@ -232,6 +232,51 @@ python3 cli.py -p "Test123!" --json
 
 ---
 
+## 🚧 Planned Features (Roadmap)
+
+### Phase 2 - Advanced Analysis
+- [ ] **Keyboard Pattern Detection** - Detect QWERTY, DVORAK patterns
+- [ ] **Levenshtein Distance** - Find similarity to known passwords
+- [ ] **Contextual Analysis** - Check against user's personal info
+- [ ] **Dictionary Expansion** - Support custom word lists
+- [ ] **Multi-language Support** - Turkish, German, French wordlists
+
+### Phase 3 - Integration & APIs
+- [ ] **REST API** - HTTP endpoint for password analysis
+- [ ] **Docker Container** - Containerized deployment
+- [ ] **Python Package** - PyPI distribution
+- [ ] **Web Dashboard** - Interactive web interface
+- [ ] **Database Logging** - Track analysis history
+
+### Phase 4 - Advanced Features
+- [ ] **Compromised Password Check** - HaveIBeenPwned API integration
+- [ ] **Machine Learning Model** - Neural network for pattern recognition
+- [ ] **Batch Processing Queue** - Large file processing optimization
+- [ ] **Real-time Monitoring** - Password change detection
+- [ ] **Custom Rules Engine** - User-defined validation rules
+
+### Phase 5 - Enterprise Features
+- [ ] **LDAP Integration** - Active Directory support
+- [ ] **Audit Logging** - Compliance reporting (GDPR, SOC2)
+- [ ] **Team Management** - Multi-user accounts
+- [ ] **API Rate Limiting** - Enterprise tier support
+- [ ] **Security Alerts** - Real-time breach notifications
+
+### Performance Improvements
+- [ ] GPU acceleration via CUDA/OpenCL
+- [ ] Distributed processing support
+- [ ] Caching mechanism for common passwords
+- [ ] Parallel batch analysis
+
+### Testing & Documentation
+- [ ] Increase test coverage to 95%+
+- [ ] Add integration tests
+- [ ] Performance benchmarks
+- [ ] Video tutorials
+- [ ] API documentation (Swagger/OpenAPI)
+
+---
+
 **Made with ❤️ for password security education**
 
 Last Updated: November 28, 2025 | Version 2.0
