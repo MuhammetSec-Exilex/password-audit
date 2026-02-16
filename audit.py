@@ -98,7 +98,7 @@ def entropy_bits(password: str) -> float:
     return bits
 
 def shannon_entropy(password: str) -> float:
-    """Calculate Shannon entropy based on character frequency.
+    """Calculate Shannon entropy based on character frequency. 
     
     Formula: -Σ(p_i × log2(p_i)) × length
     
@@ -151,8 +151,8 @@ def _is_sequential(s: str, min_len: int = 3) -> bool:
     return ascending or descending
 
 def _detect_patterns(password: str) -> Dict[str, Any]:
-    """Detect common password weaknesses and patterns.
-    
+    """
+    Detect common password weaknesses and patterns.
     Returns a dict with 'issues' list containing detected patterns:
     - common-password: Matches known breached passwords
     - low-variation: Uses 2 or fewer unique characters (≥4 length)
@@ -368,10 +368,10 @@ def analyze_password(password: str, guesses_per_second: float = 1e9) -> Dict[str
     seconds = crack_time_seconds(bits, guesses_per_second) if bits > 0 else 0.0
     patterns = _detect_patterns(password)
     
-    # Yeni: Scenario analizi
+    #Scenario analizi
     scenarios = _calculate_crack_scenarios(bits)
     
-    # Yeni: Hash penalties
+    #Hash penalties
     bcrypt_seconds = _apply_hash_penalty(seconds, "bcrypt")
     argon2_seconds = _apply_hash_penalty(seconds, "argon2")
     
