@@ -11,6 +11,7 @@ from audit import (
     shannon_entropy,
     _pool_size,
     _is_sequential,
+    _check_spatial_patterns,
     _detect_patterns,
     crack_time_seconds,
     human_readable_seconds,
@@ -180,6 +181,74 @@ class TestIsSequential:
 # Tests for _detect_patterns()
 # ============================================================================
 
+class TestCheckSpatialPatterns:
+    """Test spatial keyboard pattern detection."""
+    
+    def test_qwerty_top_row(self):
+        """'qwerty' should be detected as spatial pattern."""
+        assert _check_spatial_patterns("qwerty") is True
+    
+    def test_qwerty_home_row(self):
+        """'asdfgh' should be detected as spatial pattern."""
+        assert _check_spatial_patterns("asdfgh") is True
+    
+    def test_qwerty_bottom_row(self):
+        """'zxcvbn' should be detected as spatial pattern."""
+        assert _check_spatial_patterns("zxcvbn") is True
+    
+    def test_symbol_row(self):
+        """'!@#$' should be detected as spatial pattern."""
+        assert _check_spatial_patterns("!@#$") is True
+    
+    def test_numpad_top_row(self):
+        """'789' should be detected as spatial pattern."""
+        assert _check_spatial_patterns("789") is True
+    
+    def test_numpad_column(self):
+        """'147' should be detected as spatial pattern."""
+        assert _check_spatial_patterns("147") is True
+    
+    def test_numpad_diagonal(self):
+        """'159' should be detected as spatial pattern."""
+        assert _check_spatial_patterns("159") is True
+    
+    def test_reverse_pattern(self):
+        """'ewq' (reverse of 'qwe') should be detected."""
+        assert _check_spatial_patterns("ewq") is True
+    
+    def test_reverse_numbers(self):
+        """'987' (reverse of '789') should be detected."""
+        assert _check_spatial_patterns("987") is True
+    
+    def test_case_insensitive(self):
+        """'QWERTY' should be detected (case-insensitive)."""
+        assert _check_spatial_patterns("QWERTY") is True
+    
+    def test_mixed_case(self):
+        """'QwErTy' should be detected (case-insensitive)."""
+        assert _check_spatial_patterns("QwErTy") is True
+    
+    def test_pattern_in_password(self):
+        """'MyP@ss789' contains '789', should be detected."""
+        assert _check_spatial_patterns("MyP@ss789") is True
+    
+    def test_no_pattern(self):
+        """'password' should NOT be detected as spatial pattern."""
+        assert _check_spatial_patterns("password") is False
+    
+    def test_random_password(self):
+        """'SecureKey!' should NOT be detected as spatial pattern."""
+        assert _check_spatial_patterns("SecureKey!") is False
+    
+    def test_short_pattern(self):
+        """'qw' is too short (< 3 chars), should NOT be detected."""
+        assert _check_spatial_patterns("qw") is False
+    
+    def test_minimum_length(self):
+        """'qwe' is exactly 3 chars, should be detected."""
+        assert _check_spatial_patterns("qwe") is True
+
+
 class TestDetectPatterns:
     """Test pattern detection."""
     
@@ -202,6 +271,16 @@ class TestDetectPatterns:
         """'abc123' should have sequential-chars issue."""
         result = _detect_patterns("abc123")
         assert "sequential-chars" in result["issues"]
+    
+    def test_spatial_pattern(self):
+        """'qwerty123' should have spatial-pattern issue."""
+        result = _detect_patterns("qwerty123")
+        assert "spatial-pattern" in result["issues"]
+    
+    def test_no_spatial_pattern(self):
+        """'MySecureP@ss!' should NOT have spatial-pattern issue."""
+        result = _detect_patterns("MySecureP@ss!")
+        assert "spatial-pattern" not in result["issues"]
     
     def test_year_like(self):
         """'Pass1990' should have year-like issue."""
@@ -355,7 +434,7 @@ class TestAnalyzePassword:
     def test_analyze_none_password(self):
         """None password should raise error."""
         with pytest.raises(ValueError):
-            analyze_password(None)
+            analyze_password(None) # type: ignore
     
     def test_analyze_custom_guesses(self):
         """Should handle custom guesses per second."""
