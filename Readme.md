@@ -9,11 +9,51 @@ Comprehensive password auditing tool for assessing strength through entropy anal
 ## 🚀 Quick Start
 
 ```bash
-python3 cli.py -p "MyPassword123!"           # Analyze password
+python3 cli.py                               # Interactive mode (secure, masked input)
+python3 cli.py -p "MyPassword123!"           # Analyze password via argument
 python3 cli.py -f passwords.txt              # Batch analysis
 python3 cli.py -p "Pass123!" --json          # JSON output
 python3 cli.py -p "Pass123" -g 1e12          # GPU simulation
 ```
+
+---
+
+## 🔑 Secure Password Input (v1.1)
+
+### Hybrid Input Approach
+
+The tool now supports **two ways** to provide passwords for analysis:
+
+#### 1️⃣ Interactive Mode (Recommended)
+Simply run the tool without the `-p` flag:
+```bash
+python3 cli.py
+```
+You'll be securely prompted to enter your password. The input is:
+- ✅ **Masked** (hidden on screen for privacy)
+- ✅ **Bypasses shell interpretation** (no issues with special characters like `!`, `$`, `&`, `*`)
+- ✅ **No quoting needed** - enter passwords exactly as they are
+
+#### 2️⃣ Command-Line Argument
+Provide password directly via the `-p` flag:
+```bash
+python3 cli.py -p 'MyP@ss$123!'
+```
+**Note:** You must quote passwords with special characters to prevent shell interpretation errors.
+
+### Why Interactive Mode?
+
+**Problem:** Shell special characters (`!`, `$`, `&`, etc.) cause issues when passed as arguments.
+
+**Examples of issues:**
+```bash
+python3 cli.py -p MyPass!123      # ❌ Shell interprets ! as history expansion
+python3 cli.py -p Pass$word       # ❌ Shell interprets $ as variable
+python3 cli.py -p "Pass!123"      # ✅ Works but requires quoting
+python3 cli.py                     # ✅✅ Best: Interactive mode (no shell issues)
+```
+
+**Solution:** Interactive mode using `getpass` library reads input directly, completely bypassing shell interpretation.
 
 ---
 
