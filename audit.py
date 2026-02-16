@@ -150,6 +150,80 @@ def _is_sequential(s: str, min_len: int = 3) -> bool:
     
     return ascending or descending
 
+def _check_spatial_patterns(password: str, min_len: int = 3) -> bool:
+    """Detect spatial keyboard patterns (QWERTY, numeric keypad).
+    
+    Detects sequences of 3+ characters that appear on keyboard layouts:
+    - QWERTY rows (forward/reverse): 'qwe', 'asd', 'zxc', '123', etc.
+    - Numeric keypad patterns: '789', '456', '147', etc.
+    
+    Examples:
+    - 'qwerty' → True (QWERTY row)
+    - 'asdfgh' → True (QWERTY home row)
+    - '123' → True (number row)
+    - '!@#' → True (shifted number row)
+    - '789' → True (numeric keypad top row)
+    - '159' → True (numeric keypad diagonal)
+    - 'password' → False (no keyboard pattern)
+    
+    Args:
+        password: Password to check
+        min_len: Minimum pattern length (default: 3)
+    
+    Returns:
+        True if a spatial pattern is detected, False otherwise
+    """
+    # QWERTY keyboard layout rows
+    qwerty_rows = [
+        "1234567890",           # Number row
+        "!@#$%^&*()",           # Shifted number row (symbols)
+        "qwertyuiop",           # Top letter row
+        "asdfghjkl",            # Home row
+        "zxcvbnm",              # Bottom row
+        "`~-_=+[{]}\\|;:'\",<.>/?",  # Additional symbols
+    ]
+    
+    # Numeric keypad layout (standard calculator/phone style)
+    # Includes rows, columns, and common diagonals
+    numpad_patterns = [
+        "789",     # Top row
+        "456",     # Middle row
+        "123",     # Bottom row
+        "741",     # Left column
+        "852",     # Middle column
+        "963",     # Right column
+        "753",     # Diagonal (top-left to bottom-right)
+        "159",     # Diagonal (bottom-left to top-right)
+        "7410",    # Left column with zero
+        "8520",    # Middle column with zero
+        "9630",    # Right column with zero
+    ]
+    
+    # Combine all keyboard patterns
+    all_patterns = qwerty_rows + numpad_patterns
+    
+    # Convert password to lowercase for case-insensitive matching
+    pw_lower = password.lower()
+    
+    # Check each possible substring of length >= min_len
+    for length in range(min_len, len(password) + 1):
+        for i in range(len(password) - length + 1):
+            segment = pw_lower[i:i + length]
+            
+            # Check forward and reverse against all keyboard patterns
+            for pattern in all_patterns:
+                pattern_lower = pattern.lower()
+                
+                # Check if segment appears in pattern (forward)
+                if segment in pattern_lower:
+                    return True
+                
+                # Check if segment appears in pattern (reverse)
+                if segment in pattern_lower[::-1]:
+                    return True
+    
+    return False
+
 def _detect_patterns(password: str) -> Dict[str, Any]:
     """
     Detect common password weaknesses and patterns.
@@ -158,6 +232,7 @@ def _detect_patterns(password: str) -> Dict[str, Any]:
     - low-variation: Uses 2 or fewer unique characters (≥4 length)
     - repeated-chars: Contains 3+ identical characters in a row
     - sequential-chars: Contains 3+ ascending/descending characters
+    - spatial-pattern: Contains keyboard layout patterns (QWERTY, numpad)
     - year-like: Contains year patterns (1900-2025 or 00-99)
     - single-case: All lowercase or all uppercase
     - all-digits: Contains only numeric digits
@@ -185,6 +260,11 @@ def _detect_patterns(password: str) -> Dict[str, Any]:
         if _is_sequential(pw[i:i+3]):
             issues.append("sequential-chars")
             break
+    
+    # Check for spatial keyboard patterns (QWERTY rows, numeric keypad)
+    # Example: 'qwerty', 'asdf', '789', '!@#' are keyboard patterns
+    if _check_spatial_patterns(pw):
+        issues.append("spatial-pattern")
 
     # Check for year-like patterns (1900-2025 or 00-99)
     # These are common weak additions to passwords
