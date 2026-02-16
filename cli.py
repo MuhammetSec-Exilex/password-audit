@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import getpass
 from audit import analyze_password
 
 try:
@@ -15,8 +16,8 @@ except ImportError:
 
 def main():
     parser = argparse.ArgumentParser(description="Password auditing tool")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-p", "--password", help="Single password to analyze")
+    group = parser.add_mutually_exclusive_group(required=False)
+    group.add_argument("-p", "--password", help="Single password to analyze (optional - will prompt if not provided)")
     group.add_argument("-f", "--file", help="File with one password per line")
     parser.add_argument("-g", "--guesses", type=float, default=1e9,
                         help="Guesses per second attacker can try (default: 1e9)")
@@ -24,15 +25,29 @@ def main():
     args = parser.parse_args()
 
     results = []
-    if args.password:
-        results.append(analyze_password(args.password, args.guesses))
-    else:
+    
+    # Handle file input
+    if args.file:
         with open(args.file, "r", encoding="utf-8") as fh:
             for line in fh:
                 pw = line.rstrip("\n\r")
                 if not pw:
                     continue
                 results.append(analyze_password(pw, args.guesses))
+    # Handle single password input
+    else:
+        # If password not provided via command line, prompt securely
+        if args.password:
+            password = args.password
+        else:
+            # Use getpass for secure, masked input (bypasses shell interpretation)
+            password = getpass.getpass("Enter password to audit (input hidden): ")
+        
+        if not password:
+            print("Error: Password cannot be empty")
+            return
+        
+        results.append(analyze_password(password, args.guesses))
 
     if args.json:
         print(json.dumps(results, indent=2, ensure_ascii=False))
