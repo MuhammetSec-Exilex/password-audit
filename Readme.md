@@ -57,7 +57,50 @@ python3 cli.py                     # ✅✅ Best: Interactive mode (no shell iss
 
 ---
 
-## 🎯 Security Levels
+## � New Features in v1.1
+
+### 🔍 Spatial Keyboard Pattern Detection
+
+The tool now detects **keyboard layout patterns** - common weak password patterns where users type adjacent keys.
+
+#### What It Detects:
+
+**QWERTY Keyboard Patterns:**
+- Number row: `1234567890`
+- Symbol row: `!@#$%^&*()`
+- Letter rows: `qwerty`, `asdfgh`, `zxcvbn`
+- Both forward (`qwe`) and reverse (`ewq`) sequences
+
+**Numeric Keypad Patterns:**
+- Rows: `789`, `456`, `123`
+- Columns: `741`, `852`, `963`
+- Diagonals: `753`, `159`
+
+#### Examples:
+
+```bash
+# Passwords WITH spatial patterns (weak):
+qwerty          # QWERTY top row
+asdfgh          # QWERTY home row
+!@#$            # Shifted number row
+789456          # Numpad rows
+ewq             # Reverse of 'qwe'
+
+# Passwords WITHOUT spatial patterns (better):
+MyP@ssword!     # Random arrangement
+SecureR@nd0m    # No keyboard sequence
+```
+
+#### How It Works:
+
+- **Case-insensitive:** Detects both `QWERTY` and `qwerty`
+- **Minimum length:** 3+ consecutive keyboard characters
+- **Bidirectional:** Catches forward and reverse patterns
+- **Comprehensive:** Checks all QWERTY rows and numpad layouts
+
+---
+
+## �🎯 Security Levels
 
 | Level | Range | Status |
 |-------|-------|--------|
@@ -101,15 +144,16 @@ Entropy (bits) = log₂(pool_size) × length
 - Unicode: 128
 - Spaces: 1
 
-### 7 Patterns Detected
+### 8 Patterns Detected (Updated in v1.1)
 
-1. **Common Password** - Dictionary match
-2. **Low Variation** - ≤2 unique characters
-3. **Repeated Chars** - 3+ same character
-4. **Sequential** - abc, 123, xyz
-5. **Year-like** - 1900-2025 or 00-99
-6. **Single Case** - All upper/lower
-7. **All Digits** - Only numbers
+1. **Common Password** - Dictionary match against known breached passwords
+2. **Low Variation** - ≤2 unique characters (weak entropy)
+3. **Repeated Chars** - 3+ identical characters in a row
+4. **Sequential** - Ascending/descending sequences (abc, 123, xyz)
+5. **Spatial Pattern** - Keyboard layouts (qwerty, asdf, 789, !@#) ⭐ NEW
+6. **Year-like** - Year patterns (1900-2025 or 00-99)
+7. **Single Case** - All uppercase or all lowercase
+8. **All Digits** - Only numeric digits
 
 ### Attack Scenarios
 
@@ -174,44 +218,101 @@ print(result["issues"])                       # List of issues
 ### Advanced Example
 
 ```python
-from audit import analyze_password, entropy_bits, shannon_entropy
+from audit import analyze_password, entropy_bits, shannon_entropy, _check_spatial_patterns
 
 pw = "MyPassword123!"
 print(f"Pool Entropy: {entropy_bits(pw):.2f} bits")
 print(f"Shannon Entropy: {shannon_entropy(pw):.2f} bits")
 
+# Check for spatial patterns
+has_spatial = _check_spatial_patterns(pw)
+print(f"Has spatial pattern: {has_spatial}")  # False
+
 # GPU simulation
 result = analyze_password(pw, guesses_per_second=1e12)
 print(result["estimated_crack_human"])
+
+# Check spatial patterns in different passwords
+print(_check_spatial_patterns("qwerty"))      # True
+print(_check_spatial_patterns("asdfgh"))      # True
+print(_check_spatial_patterns("SecureKey!"))  # False
 ```
 
 ---
 
 ## 📊 Example Output
 
+### Example 1: Weak Password with Spatial Pattern
+
+```bash
+python3 cli.py -p "qwerty123"
+```
+
 ```
 ╔════════════════════════════════════════╗
-║ 🟡 Password Analysis - FAIR            ║
+║ 🟠 Password Analysis - WEAK            ║
 ╚════════════════════════════════════════╝
 
 Basic Information:
-  Password: MyPass123
+  Password: qwerty123
   Length: 9
 
-Entropy: 53.59 bits (Pool) | 26.53 bits (Shannon)
+Entropy Analysis:
+  Pool Entropy: 46.53 bits
+  Shannon Entropy: 28.52 bits
 
-Security: 🟡 FAIR - Acceptable, could be stronger
+Security Level:
+  🟠 WEAK - Add length, mix character types
 
-Crack Time:
-  CPU: 156.68 hours
-  GPU: 3.76 minutes
-  Botnet: 13.54 seconds
+Crack Time (Brute Force):
+  Standard CPU: 235.53 days (max)
+  Single GPU: 2.06 minutes (max)
+  Large Botnet: 7.43 seconds (max)
 
-Hash Protection:
-  bcrypt: 85.85 days
-  Argon2: 429.26 days
+With Hash Protection:
+  bcrypt: 47.11 days
+  Argon2: 235.53 days
 
-Issues: sequential-chars, year-like
+⚠️  Issues Found:
+  • common-password
+  • sequential-chars
+  • single-case
+  • spatial-pattern ⭐ NEW
+  • year-like
+```
+
+### Example 2: Strong Password (No Issues)
+
+```bash
+python3 cli.py -p "MySecureP@ss!"
+```
+
+```
+╔════════════════════════════════════════╗
+║ 🟢 Password Analysis - GOOD            ║
+╚════════════════════════════════════════╝
+
+Basic Information:
+  Password: MySecureP@ss!
+  Length: 13
+
+Entropy Analysis:
+  Pool Entropy: 83.10 bits
+  Shannon Entropy: 45.26 bits
+
+Security Level:
+  🟢 GOOD - Strong password - well done!
+
+Crack Time (Brute Force):
+  Standard CPU: >= 1.32 years (max)
+  Single GPU: 4.83 days (max)
+  Large Botnet: 2.12 hours (max)
+
+With Hash Protection:
+  bcrypt: >= 262.94 years
+  Argon2: >= 1314.70 years
+
+✅ No issues detected!
 ```
 
 ---
@@ -275,7 +376,7 @@ python3 cli.py -p "Test123!" --json
 ## 🚧 Planned Features (Roadmap)
 
 ### Phase 2 - Advanced Analysis
-- [ ] **Keyboard Pattern Detection** - Detect QWERTY, DVORAK patterns
+- [x] **Keyboard Pattern Detection** - Detect QWERTY, DVORAK patterns ✅ (v1.1)
 - [ ] **Levenshtein Distance** - Find similarity to known passwords
 - [ ] **Contextual Analysis** - Check against user's personal info
 - [ ] **Dictionary Expansion** - Support custom word lists
@@ -319,4 +420,13 @@ python3 cli.py -p "Test123!" --json
 
 **Made with ❤️ for password security education**
 
-Last Updated: November 28, 2025 | Version 2.0
+## 📝 Changelog
+
+### Version 1.1 (February 16, 2026)
+- ✅ Added **Spatial Keyboard Pattern Detection** - Detects QWERTY and numpad patterns
+- ✅ Added **Hybrid Input Approach** - Interactive mode with `getpass` for secure password entry
+- ✅ Enhanced pattern detection from 7 to 8 patterns
+- ✅ Added comprehensive test suite for spatial patterns (16 new tests)
+- ✅ Improved security by bypassing shell interpretation issues
+
+Last Updated: February 16, 2026 | Version 1.1
