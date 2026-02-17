@@ -287,15 +287,27 @@ class TestDetectPatterns:
         result = _detect_patterns("Pass1990")
         assert "year-like" in result["issues"]
     
-    def test_single_case_lower(self):
-        """'password' should have single-case issue."""
+    def test_missing_uppercase(self):
+        """'password' should have missing-uppercase issue."""
         result = _detect_patterns("password")
-        assert "single-case" in result["issues"]
+        assert "missing-uppercase" in result["issues"]
     
-    def test_single_case_upper(self):
-        """'PASSWORD' should have single-case issue."""
+    def test_missing_lowercase(self):
+        """'PASSWORD' should have missing-lowercase issue."""
         result = _detect_patterns("PASSWORD")
-        assert "single-case" in result["issues"]
+        assert "missing-lowercase" in result["issues"]
+    
+    def test_mixed_case_no_issue(self):
+        """'Password' should NOT have missing-uppercase or missing-lowercase."""
+        result = _detect_patterns("Password")
+        assert "missing-uppercase" not in result["issues"]
+        assert "missing-lowercase" not in result["issues"]
+    
+    def test_no_letters_no_case_issue(self):
+        """'123!@#' has no letters, should NOT have case issues."""
+        result = _detect_patterns("123!@#")
+        assert "missing-uppercase" not in result["issues"]
+        assert "missing-lowercase" not in result["issues"]
     
     def test_all_digits(self):
         """'123456' should have all-digits issue."""
