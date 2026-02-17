@@ -167,7 +167,7 @@ def _check_spatial_patterns(password: str, min_len: int = 3) -> bool:
     - 'password' → False (no keyboard pattern)
     
     Args:
-        password: Password to check
+        password: Password to checkv
         min_len: Minimum pattern length (default: 3)
     
     Returns:
@@ -234,7 +234,8 @@ def _detect_patterns(password: str) -> Dict[str, Any]:
     - sequential-chars: Contains 3+ ascending/descending characters
     - spatial-pattern: Contains keyboard layout patterns (QWERTY, numpad)
     - year-like: Contains year patterns (1900-2025 or 00-99)
-    - single-case: All lowercase or all uppercase
+    - missing-uppercase: Has letters but no uppercase characters
+    - missing-lowercase: Has letters but no lowercase characters
     - all-digits: Contains only numeric digits
     """
     issues = []
@@ -277,10 +278,18 @@ def _detect_patterns(password: str) -> Dict[str, Any]:
         except Exception:
             pass
     
-    # Check for single case usage (all lowercase or all uppercase)
-    # Example: 'password' or 'PASSWORD' without case mixing
-    if pw.islower() or pw.isupper():
-        issues.append("single-case")
+    # Check for missing case variation (only if password contains letters)
+    # Example: 'password!@#' has letters but missing uppercase
+    # Example: 'PASSWORD123' has letters but missing lowercase
+    has_letters = any(c.isalpha() for c in pw)
+    if has_letters:
+        has_lowercase = any(c.islower() for c in pw)
+        has_uppercase = any(c.isupper() for c in pw)
+        
+        if not has_uppercase:
+            issues.append("missing-uppercase")
+        if not has_lowercase:
+            issues.append("missing-lowercase")
     
     # Check if password contains only digits
     # Example: '123456' is weak because it's purely numeric
