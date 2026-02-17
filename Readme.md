@@ -144,7 +144,7 @@ Entropy (bits) = log₂(pool_size) × length
 - Unicode: 128
 - Spaces: 1
 
-### 8 Patterns Detected (Updated in v1.1)
+### 9 Patterns Detected (Updated in v1.1)
 
 1. **Common Password** - Dictionary match against known breached passwords
 2. **Low Variation** - ≤2 unique characters (weak entropy)
@@ -152,8 +152,11 @@ Entropy (bits) = log₂(pool_size) × length
 4. **Sequential** - Ascending/descending sequences (abc, 123, xyz)
 5. **Spatial Pattern** - Keyboard layouts (qwerty, asdf, 789, !@#) ⭐ NEW
 6. **Year-like** - Year patterns (1900-2025 or 00-99)
-7. **Single Case** - All uppercase or all lowercase
-8. **All Digits** - Only numeric digits
+7. **Missing Uppercase** - Has letters but no uppercase (e.g., "password!") ⭐ IMPROVED
+8. **Missing Lowercase** - Has letters but no lowercase (e.g., "PASSWORD123") ⭐ IMPROVED
+9. **All Digits** - Only numeric digits
+
+**Note:** The case detection logic was improved to be more accurate. Passwords with symbols like `abc!@#` will now correctly show `missing-uppercase` instead of the misleading `single-case` flag.
 
 ### Attack Scenarios
 
@@ -422,6 +425,13 @@ python3 cli.py -p "Test123!" --json
 
 ## 📝 Changelog
 
+### Version 1.1.1 (February 17, 2026)
+- ✅ **Improved Case Detection Logic** - Replaced generic `single-case` with granular `missing-uppercase` and `missing-lowercase` flags
+- ✅ Fixed misleading case detection for passwords with symbols (e.g., `abc!@#` now correctly shows `missing-uppercase`)
+- ✅ Case checks now only apply when password contains letters
+- ✅ Enhanced pattern detection from 8 to 9 patterns
+- ✅ Added 2 new comprehensive test cases for case detection
+
 ### Version 1.1 (February 16, 2026)
 - ✅ Added **Spatial Keyboard Pattern Detection** - Detects QWERTY and numpad patterns
 - ✅ Added **Hybrid Input Approach** - Interactive mode with `getpass` for secure password entry
@@ -429,4 +439,9 @@ python3 cli.py -p "Test123!" --json
 - ✅ Added comprehensive test suite for spatial patterns (16 new tests)
 - ✅ Improved security by bypassing shell interpretation issues
 
-Last Updated: February 16, 2026 | Version 1.1
+### Version 1.0 (November 28, 2025)
+- Initial comprehensive release
+
+---
+
+Last Updated: February 17, 2026 | Version 1.1.1
