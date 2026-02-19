@@ -1,5 +1,5 @@
-"""Unit tests for password_audit module.
-
+"""
+Unit tests for password_audit module.
 Tests all core functionality to ensure password analysis works correctly.
 Run with: python -m pytest test_audit.py -v
 """
@@ -16,7 +16,11 @@ from audit import (
     crack_time_seconds,
     human_readable_seconds,
     analyze_password,
+    load_wordlist,
 )
+
+TEST_WORDLIST_PATH = "Wordlists/wordlist_for_test_audit.txt"
+TEST_WORDLIST = load_wordlist(TEST_WORDLIST_PATH)
 
 
 # ============================================================================
@@ -251,10 +255,14 @@ class TestCheckSpatialPatterns:
 
 class TestDetectPatterns:
     """Test pattern detection."""
+
+    def test_wordlist_loaded(self):
+        """Test wordlist file loads expected entries."""
+        assert len(TEST_WORDLIST) == 10
     
     def test_common_password(self):
         """'password' should be detected as common."""
-        result = _detect_patterns("password")
+        result = _detect_patterns("password", TEST_WORDLIST)
         assert "common-password" in result["issues"]
     
     def test_low_variation(self):
@@ -289,23 +297,23 @@ class TestDetectPatterns:
     
     def test_missing_uppercase(self):
         """'password' should have missing-uppercase issue."""
-        result = _detect_patterns("password")
+        result = _detect_patterns("password", TEST_WORDLIST)
         assert "missing-uppercase" in result["issues"]
     
     def test_missing_lowercase(self):
         """'PASSWORD' should have missing-lowercase issue."""
-        result = _detect_patterns("PASSWORD")
+        result = _detect_patterns("PASSWORD", TEST_WORDLIST)
         assert "missing-lowercase" in result["issues"]
     
     def test_mixed_case_no_issue(self):
         """'Password' should NOT have missing-uppercase or missing-lowercase."""
-        result = _detect_patterns("Password")
+        result = _detect_patterns("Password", TEST_WORDLIST)
         assert "missing-uppercase" not in result["issues"]
         assert "missing-lowercase" not in result["issues"]
     
     def test_no_letters_no_case_issue(self):
         """'123!@#' has no letters, should NOT have case issues."""
-        result = _detect_patterns("123!@#")
+        result = _detect_patterns("123!@#", TEST_WORDLIST)
         assert "missing-uppercase" not in result["issues"]
         assert "missing-lowercase" not in result["issues"]
     
@@ -321,7 +329,7 @@ class TestDetectPatterns:
     
     def test_multiple_issues(self):
         """Some passwords should have multiple issues."""
-        result = _detect_patterns("pass123")
+        result = _detect_patterns("123456", TEST_WORDLIST)
         assert len(result["issues"]) >= 2  # common-password, sequential-chars, etc.
 
 
@@ -477,7 +485,7 @@ class TestIntegration:
     
     def test_weak_password_analysis(self):
         """Weak password should show appropriate results."""
-        result = analyze_password("password")
+        result = analyze_password("password", wordlist_set=TEST_WORDLIST)
         assert result["security_level"]["level"] in ["CRITICAL", "WEAK"]
         assert "common-password" in result["issues"]
         assert result["entropy_bits"] < 50
