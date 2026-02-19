@@ -1,33 +1,27 @@
-"""Core password auditing functions.
-
-Simple, offline-safe estimations: entropy, crack time (configurable guesses/sec),
-and basic pattern detections. Designed for assessment and education — not for
-performing attacks.
-"""
 from __future__ import annotations
 
 import math
 import json
 import re
-from typing import Dict, Any
+import argparse
+from typing import Dict, Any, Set, Optional
 
-COMMON_PASSWORDS = {
-    # Most common passwords
-    "password", "123456", "123456789", "qwerty", "abc123",
-    "password1", "letmein", "admin", "welcome",
-    
-    # Top 2025 breached passwords
-    "123456", "admin", "12345678", "123456789", "1234", "Aa123456", "12345", "password", "123", "1234567890",
-    "1234567", "123123", "111111", "12345678910", "P@ssw0rd", "Password", "admin123", "1111111", "Pass@123", 
-    "123456a", "000000", "abc123", "qwerty", "qwerty123", "qwerty1", "123456789a", "123qwe", "letmein", "welcome",
-    "welcome1", "password1", "password1!", "Password1", "123abc", "123123123", "guest", "guest123", "test",
-    "test123", "demo", "demo123", "user", "user123", "login", "login123", "123!@#", "1234qwer", "qwertyuiop",
-    "zxcvbn", "asdfgh", "asdfghjkl", "123321", "654321", "777777", "88888888", "999999", "iloveyou", "secret",
-    "secret123", "dragon", "monkey", "football", "baseball", "12345678a", "Passw0rd123", "admin!23", "admin@",
-    "password!", "P@ssword", "123456789!", "1q2w3e4r", "1qaz2wsx", "qazwsx", "1q2w3e4r5t", "00000000", "11111111",
-    "1234567899", "qwe123", "qwe12345", "abcd1234", "abcd123", "admin2025", "password2025", "welcome123", "letmein123",
-    "root", "root123", "root@123", "user2025", "passw0rd123", "Pa$$word1", "Pa$$w0rd2025", "Qwerty123!", "admin1234", "12345a"
-}
+def load_wordlist(filepath: str) -> Set[str]:
+    """Load a password wordlist from a text file into a set.
+
+    Reads line by line, strips whitespace, converts to lowercase, and returns
+    a set for O(1) lookup performance.
+    """
+    wordlist: Set[str] = set()
+    try:
+        with open(filepath, "r", encoding="utf-8") as fh:
+            for line in fh:
+                word = line.strip().lower()
+                if word:
+                    wordlist.add(word)
+    except FileNotFoundError:
+        return set()
+    return wordlist
 
 
 def _pool_size(password: str) -> int:
@@ -224,7 +218,7 @@ def _check_spatial_patterns(password: str, min_len: int = 3) -> bool:
     
     return False
 
-def _detect_patterns(password: str) -> Dict[str, Any]:
+def _detect_patterns(password: str, wordlist_set: Optional[Set[str]] = None) -> Dict[str, Any]:
     """
     Detect common password weaknesses and patterns.
     Returns a dict with 'issues' list containing detected patterns:
@@ -240,9 +234,10 @@ def _detect_patterns(password: str) -> Dict[str, Any]:
     """
     issues = []
     pw = password
+    wordlist = wordlist_set or set()
     
     # Check if password is in common/breached password list
-    if pw.lower() in COMMON_PASSWORDS:
+    if pw.lower() in wordlist:
         issues.append("common-password")
     
     # Check for low character variety (≤2 unique chars, password ≥4 chars)
@@ -448,14 +443,18 @@ def human_readable_seconds(s: float) -> str:
         current_unit = next_unit
     return f">= {value:.2f} {current_unit}"
 
-def analyze_password(password: str, guesses_per_second: float = 1e9) -> Dict[str, Any]:
+def analyze_password(
+    password: str,
+    guesses_per_second: float = 1e9,
+    wordlist_set: Optional[Set[str]] = None,
+) -> Dict[str, Any]:
     """Run a basic analysis and return structured results."""
     if password is None:
         raise ValueError("password must be provided")
     bits = entropy_bits(password)
     shannon = shannon_entropy(password)
     seconds = crack_time_seconds(bits, guesses_per_second) if bits > 0 else 0.0
-    patterns = _detect_patterns(password)
+    patterns = _detect_patterns(password, wordlist_set)
     
     #Scenario analizi
     scenarios = _calculate_crack_scenarios(bits)
@@ -505,5 +504,21 @@ def analyze_password(password: str, guesses_per_second: float = 1e9) -> Dict[str
     return result
 
 if __name__ == "__main__":
-    import sys
-    print(json.dumps(analyze_password(sys.argv[1] if len(sys.argv) > 1 else "", 1e6), indent=2))
+    parser = argparse.ArgumentParser(description="Password auditing tool (module)")
+    parser.add_argument("password", nargs="?", default="", help="Password to analyze")
+    parser.add_argument("-g", "--guesses", type=float, default=1e6,
+                        help="Guesses per second attacker can try (default: 1e6)")
+    parser.add_argument(
+        "-w",
+        "--wordlist",
+        default="Wordlists/100k-most-used-passwords-NCSC.txt",
+        help="Path to password wordlist (default: Wordlists/100k-most-used-passwords-NCSC.txt)",
+    )
+    args = parser.parse_args()
+
+    print(f"Loading wordlist: {args.wordlist}")
+    wordlist_set = load_wordlist(args.wordlist)
+    print(f"Loaded {len(wordlist_set)} passwords into memory")
+
+    result = analyze_password(args.password, args.guesses, wordlist_set)
+    print(json.dumps(result, indent=2))
