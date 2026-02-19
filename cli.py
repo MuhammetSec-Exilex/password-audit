@@ -1,10 +1,12 @@
-"""CLI for the password auditing tool."""
+"""
+CLI for the password auditing tool.
+"""
 from __future__ import annotations
 
 import argparse
 import json
 import getpass
-from audit import analyze_password
+from audit import analyze_password, load_wordlist
 
 try:
     from termcolor import colored
@@ -22,9 +24,16 @@ def main():
     parser.add_argument("-g", "--guesses", type=float, default=1e9,
                         help="Guesses per second attacker can try (default: 1e9)")
     parser.add_argument("--json", action="store_true", help="Output JSON")
+    parser.add_argument(
+        "-w",
+        "--wordlist",
+        default="Wordlists/100k-most-used-passwords-NCSC.txt",
+        help="Path to password wordlist (default: Wordlists/100k-most-used-passwords-NCSC.txt)",
+    )
     args = parser.parse_args()
 
     results = []
+    wordlist_set = load_wordlist(args.wordlist)
     
     # Handle file input
     if args.file:
@@ -33,7 +42,7 @@ def main():
                 pw = line.rstrip("\n\r")
                 if not pw:
                     continue
-                results.append(analyze_password(pw, args.guesses))
+                results.append(analyze_password(pw, args.guesses, wordlist_set))
     # Handle single password input
     else:
         # If password not provided via command line, prompt securely
@@ -47,7 +56,7 @@ def main():
             print("Error: Password cannot be empty")
             return
         
-        results.append(analyze_password(password, args.guesses))
+        results.append(analyze_password(password, args.guesses, wordlist_set))
 
     if args.json:
         print(json.dumps(results, indent=2, ensure_ascii=False))
