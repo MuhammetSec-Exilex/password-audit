@@ -11,6 +11,7 @@ Comprehensive password auditing tool for assessing strength through entropy anal
 ```bash
 python3 cli.py                               # Interactive mode (secure, masked input)
 python3 cli.py -p "MyPassword123!"           # Analyze password via argument
+python3 cli.py -p "MyPassword123!" -w Wordlists/100k-most-used-passwords-NCSC.txt  # Custom wordlist
 python3 cli.py -f passwords.txt              # Batch analysis
 python3 cli.py -p "Pass123!" --json          # JSON output
 python3 cli.py -p "Pass123" -g 1e12          # GPU simulation
@@ -122,9 +123,36 @@ OPTIONS:
   -p, --password TEXT    Single password
   -f, --file TEXT        File with passwords (one per line)
   -g, --guesses FLOAT    Guesses per second (default: 1e9)
+  -w, --wordlist TEXT    Path to password wordlist (default: Wordlists/100k-most-used-passwords-NCSC.txt)
   --json                 JSON output
   -h, --help             Help message
 ```
+
+---
+
+## 📚 Common Password Wordlist
+
+The tool now loads **common passwords dynamically** from a wordlist file.
+
+**Default file:**
+```
+Wordlists/100k-most-used-passwords-NCSC.txt
+```
+
+**What happens at runtime:**
+- The wordlist is read line by line
+- Each entry is lowercased and stored in a Python `set` for fast $O(1)$ lookups
+- In `audit.py` module mode, a short status message prints the file path and count
+
+**Custom wordlist:**
+```bash
+python3 cli.py -p "MyPassword123!" -w Wordlists/your-list.txt
+```
+
+**Tests:**
+- A lightweight test wordlist is stored at:
+  `Wordlists/wordlist_for_test_audit.txt`
+- It contains the **first 10 lines** of the main list to verify loading works
 
 ---
 
@@ -279,7 +307,7 @@ With Hash Protection:
 ⚠️  Issues Found:
   • common-password
   • sequential-chars
-  • single-case
+  • missing-uppercase
   • spatial-pattern ⭐ NEW
   • year-like
 ```
@@ -425,6 +453,11 @@ python3 cli.py -p "Test123!" --json
 
 ## 📝 Changelog
 
+### Version 1.1.2 (February 19, 2026)
+- ✅ Replaced hardcoded common-password set with **dynamic wordlist loading**
+- ✅ Added `-w/--wordlist` option for custom lists
+- ✅ Added test wordlist file for reliable loading verification
+
 ### Version 1.1.1 (February 17, 2026)
 - ✅ **Improved Case Detection Logic** - Replaced generic `single-case` with granular `missing-uppercase` and `missing-lowercase` flags
 - ✅ Fixed misleading case detection for passwords with symbols (e.g., `abc!@#` now correctly shows `missing-uppercase`)
@@ -444,4 +477,4 @@ python3 cli.py -p "Test123!" --json
 
 ---
 
-Last Updated: February 17, 2026 | Version 1.1.1
+Last Updated: February 19, 2026 | Version 1.1.2
