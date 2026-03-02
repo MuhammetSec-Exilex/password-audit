@@ -6,7 +6,15 @@ from __future__ import annotations
 import argparse
 import json
 import getpass
+import sys
 from audit import analyze_password, load_wordlist
+
+MAX_PASSWORD_LENGTH = 512
+
+
+def _has_illegal_control_characters(value: str) -> bool:
+    """Return True if value contains non-printable/control characters."""
+    return any((ord(ch) < 32 and ch != " ") or not ch.isprintable() for ch in value)
 
 try:
     from termcolor import colored
@@ -42,6 +50,15 @@ def main():
                 pw = line.rstrip("\n\r")
                 if not pw:
                     continue
+                if len(pw) > MAX_PASSWORD_LENGTH:
+                    print(
+                        f"Error: Input exceeds the maximum allowed length of "
+                        f"{MAX_PASSWORD_LENGTH} characters."
+                    )
+                    sys.exit(1)
+                if _has_illegal_control_characters(pw):
+                    print("Error: Illegal control characters detected in input.")
+                    sys.exit(1)
                 results.append(analyze_password(pw, args.guesses, wordlist_set))
     # Handle single password input
     else:
@@ -51,6 +68,16 @@ def main():
         else:
             # Use getpass for secure, masked input (bypasses shell interpretation)
             password = getpass.getpass("Enter password to audit (input hidden): ")
+
+        if len(password) > MAX_PASSWORD_LENGTH:
+            print(
+                f"Error: Input exceeds the maximum allowed length of "
+                f"{MAX_PASSWORD_LENGTH} characters."
+            )
+            sys.exit(1)
+        if _has_illegal_control_characters(password):
+            print("Error: Illegal control characters detected in input.")
+            sys.exit(1)
         
         if not password:
             print("Error: Password cannot be empty")
