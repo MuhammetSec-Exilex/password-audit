@@ -128,6 +128,11 @@ OPTIONS:
   -h, --help             Help message
 ```
 
+**Input security limit:**
+- Maximum password length is **512 characters**.
+- If exceeded, the program exits gracefully with:  
+  `Error: Input exceeds the maximum allowed length of 512 characters.`
+
 ---
 
 ## 📚 Common Password Wordlist
@@ -153,6 +158,30 @@ python3 cli.py -p "MyPassword123!" -w Wordlists/your-list.txt
 - A lightweight test wordlist is stored at:
   `Wordlists/wordlist_for_test_audit.txt`
 - It contains the **first 10 lines** of the main list to verify loading works
+
+---
+
+## 🧪 Running Tests
+
+### Terminal (Recommended)
+
+```bash
+# Run all tests
+./venv/bin/python -m pytest test_audit.py -q
+
+# Run with verbose output
+./venv/bin/python -m pytest test_audit.py -v
+
+# Run only input-length validation tests
+./venv/bin/python -m pytest test_audit.py::TestInputValidation -q
+```
+
+### If terminal is not available (VS Code UI)
+
+1. Open **Testing** panel in VS Code (beaker icon).
+2. Click **Configure Python Tests** (choose **pytest**).
+3. Select `test_audit.py` or a specific test class.
+4. Click **Run** from the Testing panel.
 
 ---
 
@@ -453,6 +482,12 @@ python3 cli.py -p "Test123!" --json
 
 ## 📝 Changelog
 
+### Version 1.1.3 (March 2, 2026)
+- ✅ Added defensive input-length validation (max **512** chars) to prevent ReDoS risk at entry points
+- ✅ Validation runs before analysis/regex processing and exits with code `1` on violation
+- ✅ Added tests in `test_audit.py` for both `cli.py` and `audit.py` main entry points
+- ✅ Added README instructions for running tests (terminal + VS Code Testing panel)
+
 ### Version 1.1.2 (February 19, 2026)
 - ✅ Replaced hardcoded common-password set with **dynamic wordlist loading**
 - ✅ Added `-w/--wordlist` option for custom lists
@@ -477,4 +512,4 @@ python3 cli.py -p "Test123!" --json
 
 ---
 
-Last Updated: February 19, 2026 | Version 1.1.2
+Last Updated: March 2, 2026 | Version 1.1.3
