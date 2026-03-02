@@ -555,6 +555,32 @@ class TestInputValidation:
         assert result.returncode == 1
         assert "maximum allowed length of 512 characters" in result.stdout
 
+    def test_cli_rejects_control_characters(self):
+        """cli.py should reject control characters in password input with exit code 1."""
+        invalid_password = "abc\x1bdef"
+        result = subprocess.run(
+            [sys.executable, "cli.py", "-p", invalid_password],
+            cwd=".",
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 1
+        assert "Illegal control characters detected in input." in result.stdout
+
+    def test_audit_main_rejects_control_characters(self):
+        """audit.py __main__ should reject control characters in password input with exit code 1."""
+        invalid_password = "abc\x1bdef"
+        result = subprocess.run(
+            [sys.executable, "audit.py", invalid_password],
+            cwd=".",
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 1
+        assert "Illegal control characters detected in input." in result.stdout
+
 
 # ============================================================================
 # Edge Cases
