@@ -9,6 +9,11 @@ from typing import Dict, Any, Set, Optional
 
 MAX_PASSWORD_LENGTH = 512
 
+
+def _has_illegal_control_characters(value: str) -> bool:
+    """Return True if value contains non-printable/control characters."""
+    return any((ord(ch) < 32 and ch != " ") or not ch.isprintable() for ch in value)
+
 def load_wordlist(filepath: str) -> Set[str]:
     """Load a password wordlist from a text file into a set.
 
@@ -528,6 +533,9 @@ if __name__ == "__main__":
             f"Error: Input exceeds the maximum allowed length of "
             f"{MAX_PASSWORD_LENGTH} characters."
         )
+        sys.exit(1)
+    if _has_illegal_control_characters(args.password):
+        print("Error: Illegal control characters detected in input.")
         sys.exit(1)
 
     result = analyze_password(args.password, args.guesses, wordlist_set)
