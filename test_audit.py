@@ -6,6 +6,8 @@ Run with: python -m pytest test_audit.py -v
 
 import pytest
 import math
+import subprocess
+import sys
 from audit import (
     entropy_bits,
     shannon_entropy,
@@ -518,6 +520,40 @@ class TestIntegration:
         
         assert bcrypt_time > base_time
         assert argon2_time > bcrypt_time
+
+
+# ============================================================================
+# Input Validation / ReDoS Guard Tests
+# ============================================================================
+
+class TestInputValidation:
+    """Test defensive input length validation in entry points."""
+
+    def test_cli_rejects_password_over_512_chars(self):
+        """cli.py should reject overly long password input with exit code 1."""
+        long_password = "a" * 513
+        result = subprocess.run(
+            [sys.executable, "cli.py", "-p", long_password],
+            cwd=".",
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 1
+        assert "maximum allowed length of 512 characters" in result.stdout
+
+    def test_audit_main_rejects_password_over_512_chars(self):
+        """audit.py __main__ should reject overly long password input with exit code 1."""
+        long_password = "a" * 513
+        result = subprocess.run(
+            [sys.executable, "audit.py", long_password],
+            cwd=".",
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 1
+        assert "maximum allowed length of 512 characters" in result.stdout
 
 
 # ============================================================================
