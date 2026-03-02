@@ -4,7 +4,10 @@ import math
 import json
 import re
 import argparse
+import sys
 from typing import Dict, Any, Set, Optional
+
+MAX_PASSWORD_LENGTH = 512
 
 def load_wordlist(filepath: str) -> Set[str]:
     """Load a password wordlist from a text file into a set.
@@ -519,6 +522,13 @@ if __name__ == "__main__":
     print(f"Loading wordlist: {args.wordlist}")
     wordlist_set = load_wordlist(args.wordlist)
     print(f"Loaded {len(wordlist_set)} passwords into memory")
+
+    if len(args.password) > MAX_PASSWORD_LENGTH:
+        print(
+            f"Error: Input exceeds the maximum allowed length of "
+            f"{MAX_PASSWORD_LENGTH} characters."
+        )
+        sys.exit(1)
 
     result = analyze_password(args.password, args.guesses, wordlist_set)
     print(json.dumps(result, indent=2))
