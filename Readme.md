@@ -132,6 +132,9 @@ OPTIONS:
 - Maximum password length is **512 characters**.
 - If exceeded, the program exits gracefully with:  
   `Error: Input exceeds the maximum allowed length of 512 characters.`
+- Input is also blocked if it contains **illegal control characters** (e.g., null byte, escape/control sequences).
+- If detected, the program exits with:  
+  `Error: Illegal control characters detected in input.`
 
 ---
 
@@ -172,7 +175,7 @@ python3 cli.py -p "MyPassword123!" -w Wordlists/your-list.txt
 # Run with verbose output
 ./venv/bin/python -m pytest test_audit.py -v
 
-# Run only input-length validation tests
+# Run only input validation tests (length + control characters)
 ./venv/bin/python -m pytest test_audit.py::TestInputValidation -q
 ```
 
@@ -482,6 +485,11 @@ python3 cli.py -p "Test123!" --json
 
 ## 📝 Changelog
 
+### Version 1.1.4 (March 2, 2026)
+- ✅ Added second defensive input-validation layer for illegal control characters (`\x00`, escape/control sequences)
+- ✅ Validation is executed before analysis/regex operations and exits with code `1` on violation
+- ✅ Expanded `TestInputValidation` coverage for both `cli.py` and `audit.py` entry points
+
 ### Version 1.1.3 (March 2, 2026)
 - ✅ Added defensive input-length validation (max **512** chars) to prevent ReDoS risk at entry points
 - ✅ Validation runs before analysis/regex processing and exits with code `1` on violation
@@ -512,4 +520,4 @@ python3 cli.py -p "Test123!" --json
 
 ---
 
-Last Updated: March 2, 2026 | Version 1.1.3
+Last Updated: March 2, 2026 | Version 1.1.4
