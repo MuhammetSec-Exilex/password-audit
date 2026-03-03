@@ -132,6 +132,7 @@ OPTIONS:
 - Maximum password length is **512 characters**.
 - If exceeded, the program exits gracefully with:  
   `Error: Input exceeds the maximum allowed length of 512 characters.`
+- Leading and trailing whitespace is automatically stripped from input (spaces, tabs, newlines), while internal spaces are preserved for passphrases.
 - Input is also blocked if it contains **illegal control characters** (e.g., null byte, escape/control sequences).
 - If detected, the program exits with:  
   `Error: Illegal control characters detected in input.`
