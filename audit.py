@@ -5,6 +5,7 @@ import json
 import re
 import argparse
 import sys
+import unicodedata
 from typing import Dict, Any, Set, Optional
 
 MAX_PASSWORD_LENGTH = 512
@@ -538,6 +539,8 @@ if __name__ == "__main__":
     if _has_illegal_control_characters(password):
         print("Error: Illegal control characters detected in input.")
         sys.exit(1)
+
+    password = unicodedata.normalize("NFKC", password)
 
     result = analyze_password(password, args.guesses, wordlist_set)
     print(json.dumps(result, indent=2))
