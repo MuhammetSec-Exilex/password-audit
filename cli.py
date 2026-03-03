@@ -7,6 +7,7 @@ import argparse
 import json
 import getpass
 import sys
+import unicodedata
 from audit import analyze_password, load_wordlist
 
 MAX_PASSWORD_LENGTH = 512
@@ -47,7 +48,7 @@ def main():
     if args.file:
         with open(args.file, "r", encoding="utf-8") as fh:
             for line in fh:
-                pw = line.rstrip("\n\r")
+                pw = line.strip()
                 if not pw:
                     continue
                 if len(pw) > MAX_PASSWORD_LENGTH:
@@ -59,6 +60,7 @@ def main():
                 if _has_illegal_control_characters(pw):
                     print("Error: Illegal control characters detected in input.")
                     sys.exit(1)
+                pw = unicodedata.normalize("NFKC", pw)
                 results.append(analyze_password(pw, args.guesses, wordlist_set))
     # Handle single password input
     else:
@@ -69,6 +71,8 @@ def main():
             # Use getpass for secure, masked input (bypasses shell interpretation)
             password = getpass.getpass("Enter password to audit (input hidden): ")
 
+        password = password.strip()
+
         if len(password) > MAX_PASSWORD_LENGTH:
             print(
                 f"Error: Input exceeds the maximum allowed length of "
@@ -78,6 +82,8 @@ def main():
         if _has_illegal_control_characters(password):
             print("Error: Illegal control characters detected in input.")
             sys.exit(1)
+
+        password = unicodedata.normalize("NFKC", password)
         
         if not password:
             print("Error: Password cannot be empty")
