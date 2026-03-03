@@ -6,6 +6,7 @@ Run with: python -m pytest test_audit.py -v
 
 import pytest
 import math
+import json
 import subprocess
 import sys
 from audit import (
@@ -580,6 +581,25 @@ class TestInputValidation:
 
         assert result.returncode == 1
         assert "Illegal control characters detected in input." in result.stdout
+
+    def test_audit_main_strips_outer_whitespace_but_keeps_internal_spaces(self):
+        """audit.py __main__ should strip leading/trailing whitespace only."""
+        password_with_outer_whitespace = "\t  My Pass 123  \n"
+        result = subprocess.run(
+            [sys.executable, "audit.py", password_with_outer_whitespace],
+            cwd=".",
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0
+
+        json_start = result.stdout.find("{")
+        assert json_start != -1
+        payload = json.loads(result.stdout[json_start:])
+
+        assert payload["password"] == "My Pass 123"
+        assert payload["length"] == len("My Pass 123")
 
 
 # ============================================================================
