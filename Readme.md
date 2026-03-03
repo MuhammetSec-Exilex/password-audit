@@ -136,6 +136,8 @@ OPTIONS:
 - Input is also blocked if it contains **illegal control characters** (e.g., null byte, escape/control sequences).
 - If detected, the program exits with:  
   `Error: Illegal control characters detected in input.`
+- After strip + validation, input is normalized with Unicode **NFKC** (`unicodedata.normalize("NFKC", password)`) before analysis.
+- This standardizes visually similar Unicode forms (e.g., full-width forms/ligatures) while preserving valid printable special characters.
 
 ---
 
@@ -486,6 +488,11 @@ python3 cli.py -p "Test123!" --json
 
 ## 📝 Changelog
 
+### Version 1.1.5 (March 4, 2026)
+- ✅ Added whitespace stripping at entry points (`.strip()`) to remove leading/trailing spaces, tabs, and newlines while preserving internal spaces
+- ✅ Added Unicode normalization with `unicodedata.normalize("NFKC", password)` after strip + validation and before analysis
+- ✅ Expanded `TestInputValidation` with NFKC normalization tests for both `audit.py` and `cli.py`
+
 ### Version 1.1.4 (March 2, 2026)
 - ✅ Added second defensive input-validation layer for illegal control characters (`\x00`, escape/control sequences)
 - ✅ Validation is executed before analysis/regex operations and exits with code `1` on violation
@@ -521,4 +528,4 @@ python3 cli.py -p "Test123!" --json
 
 ---
 
-Last Updated: March 2, 2026 | Version 1.1.4
+Last Updated: March 4, 2026 | Version 1.1.5
