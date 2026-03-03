@@ -601,6 +601,39 @@ class TestInputValidation:
         assert payload["password"] == "My Pass 123"
         assert payload["length"] == len("My Pass 123")
 
+    def test_audit_main_applies_nfkc_normalization(self):
+        """audit.py __main__ should normalize Unicode compatibility characters with NFKC."""
+        fullwidth_password = "Ｐａｓｓ１２３！"
+        result = subprocess.run(
+            [sys.executable, "audit.py", fullwidth_password],
+            cwd=".",
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0
+
+        json_start = result.stdout.find("{")
+        assert json_start != -1
+        payload = json.loads(result.stdout[json_start:])
+
+        assert payload["password"] == "Pass123!"
+
+    def test_cli_applies_nfkc_normalization(self):
+        """cli.py should normalize Unicode compatibility characters with NFKC."""
+        fullwidth_password = "Ｐａｓｓ１２３！"
+        result = subprocess.run(
+            [sys.executable, "cli.py", "-p", fullwidth_password, "--json"],
+            cwd=".",
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0
+        payload = json.loads(result.stdout)
+
+        assert payload[0]["password"] == "Pass123!"
+
 
 # ============================================================================
 # Edge Cases
