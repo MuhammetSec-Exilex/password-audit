@@ -523,20 +523,21 @@ if __name__ == "__main__":
         help="Path to password wordlist (default: Wordlists/100k-most-used-passwords-NCSC.txt)",
     )
     args = parser.parse_args()
+    password = args.password.strip()
 
     print(f"Loading wordlist: {args.wordlist}")
     wordlist_set = load_wordlist(args.wordlist)
     print(f"Loaded {len(wordlist_set)} passwords into memory")
 
-    if len(args.password) > MAX_PASSWORD_LENGTH:
+    if len(password) > MAX_PASSWORD_LENGTH:
         print(
             f"Error: Input exceeds the maximum allowed length of "
             f"{MAX_PASSWORD_LENGTH} characters."
         )
         sys.exit(1)
-    if _has_illegal_control_characters(args.password):
+    if _has_illegal_control_characters(password):
         print("Error: Illegal control characters detected in input.")
         sys.exit(1)
 
-    result = analyze_password(args.password, args.guesses, wordlist_set)
+    result = analyze_password(password, args.guesses, wordlist_set)
     print(json.dumps(result, indent=2))
